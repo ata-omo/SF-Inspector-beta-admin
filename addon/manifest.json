@@ -1,10 +1,10 @@
 {
-  "name": "Salesforce Inspector Reloaded",
+  "name": "Salesforce Inspector beta admin",
   "description": "Productivity tools for Salesforce administrators and developers to inspect data and metadata directly from the Salesforce UI.",
   "version": "1.271",
   "version_name": "1.27",
   "icons": {
-    "128": "icon128.png"
+    "128": "sf-admin-beta.png"
   },
   "action": {
     "default_title": "Open popup"

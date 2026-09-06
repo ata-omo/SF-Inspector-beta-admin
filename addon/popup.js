@@ -108,6 +108,7 @@ class App extends React.PureComponent {
       isFieldsPresent: false,
       exportHref: "data-export.html?" + hostArg,
       importHref: "data-import.html?" + hostArg,
+      adminTasksHref: "admin-tasks.html?" + hostArg,
       eventMonitorHref: "event-monitor.html?" + hostArg,
       fieldCreatorHref: "field-creator.html?" + hostArg,
       limitsHref: "limits.html?" + hostArg,
@@ -169,6 +170,7 @@ class App extends React.PureComponent {
       "n": ["all", "clickNewBtn"],
       "e": ["click", "dataExportBtn"],
       "i": ["click", "dataImportBtn"],
+      "y": ["click", "adminTasksBtn"],
       "l": ["click", "limitsBtn"],
       "t": ["click", "fieldCreatorBtn"],
       "d": ["click", "metaRetrieveBtn"],
@@ -254,7 +256,7 @@ class App extends React.PureComponent {
       inInspector,
       addonVersion
     } = this.props;
-    let {isInSetup, contextUrl, apiVersionInput, exportHref, importHref, eventMonitorHref, fieldCreatorHref, limitsHref, isFieldsPresent, latestNotesViewed, useLegacyDownloadMetadata} = this.state;
+    let {isInSetup, contextUrl, apiVersionInput, exportHref, importHref, adminTasksHref, eventMonitorHref, fieldCreatorHref, limitsHref, isFieldsPresent, latestNotesViewed, useLegacyDownloadMetadata} = this.state;
     let hostArg = new URLSearchParams();
     hostArg.set("host", sfHost);
     let linkInNewTab = JSON.parse(localStorage.getItem("openLinksInNewTab"));
@@ -335,6 +337,9 @@ class App extends React.PureComponent {
             ),
             h("div", {className: "slds-m-bottom_xx-small"},
               h("a", {ref: "dataImportBtn", href: importHref, target: linkTarget, className: "page-button slds-button slds-button_neutral"}, h("span", {}, "Data ", h("u", {}, "I"), "mport"))
+            ),
+            h("div", {className: "slds-m-bottom_xx-small"},
+              h("a", {ref: "adminTasksBtn", href: adminTasksHref, target: linkTarget, className: "page-button slds-button slds-button_neutral"}, h("span", {}, "Admin ", h("u", {}, "T"), "asks"))
             ),
             displayButton("org-limits", hideButtonsOption) ? h("div", {className: "slds-m-bottom_xx-small"},
               h("a", {ref: "limitsBtn", href: limitsHref, target: linkTarget, className: "page-button slds-button slds-button_neutral"}, h("span", {}, "Org ", h("u", {}, "L"), "imits"))
