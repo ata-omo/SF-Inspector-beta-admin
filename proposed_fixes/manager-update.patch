@@ -1,0 +1,144 @@
+*** Begin Patch
+*** Update File: addon/manager-update.js
+@@
+-    try {
+-      await this.resolveUsers();
+-
+-      if (this.cancelRequested) {
+-        this.isProcessingQueue = false;
+-        this.generalMessage =
+-          "Queued processing was cancelled.";
+-
+-        this.didUpdate();
+-        return;
+-      }
+-
++    try {
++      await this.resolveUsers();
++
++      if (this.cancelRequested) {
++        this.isProcessingQueue = false;
++        this.generalMessage =
++          "Queued processing was cancelled.";
++
++        this.didUpdate();
++        return;
++      }
++
++      // Build the list of rows to process (still QUEUED)
++      const queuedRows = this.rows.filter(r => r.status === STATUS.QUEUED);
++
++      if (queuedRows.length === 0) {
++        this.isProcessingQueue = false;
++        this.generalMessage = "No rows to process.";
++        this.didUpdate();
++        return;
++      }
++
++      const batchSize = Math.max(1, Number(this.batchSize) || 50);
++      const threadCount = Math.max(1, Math.min(6, Number(this.threadCount) || 1));
++
++      // Create batches of queued rows
++      const batches = this.chunkArray(queuedRows, batchSize);
++
++      // Worker function that processes batches until none remain
++      const wsdl = sfConn.wsdl(apiVersion, "Enterprise");
++
++      const processBatch = async (batchRows) => {
++        if (this.cancelRequested) return;
++
++        // Mark rows processing
++        for (const row of batchRows) {
++          row.status = STATUS.PROCESSING;
++          row.action = "Updating";
++          row.error = "";
++        }
++        this.activeBatches++;
++        this.didUpdate();
++
++        // Build sObjects for SOAP update
++        const sObjects = batchRows.map(row => {
++          return {
++            "$xsi:type": "sf:User",
++            Id: row.employeeSalesforceId,
++            ManagerId: row.managerSalesforceId
++          };
++        });
++
++        try {
++          const args = { sObjects };
++          const result = await this.spinFor(sfConn.soap(wsdl, "update", args));
++
++          const results = sfConn.asArray(result);
++
++          for (let i = 0; i < results.length; i++) {
++            const res = results[i];
++            const row = batchRows[i];
++
++            if (res && String(res.success) === "true") {
++              row.status = STATUS.SUCCEEDED;
++              row.action = "Updated";
++              row.error = "";
++            } else {
++              row.status = STATUS.FAILED;
++              row.action = "";
++              const errors = sfConn.asArray(res && res.errors);
++              row.error = errors.map(e => (e.statusCode ? e.statusCode + ": " : "") + (e.message || JSON.stringify(e))).join(", ");
++            }
++          }
++        } catch (err) {
++          // Treat as batch-level failure
++          const errMsg = err && err.message ? err.message : String(err);
++          for (const row of batchRows) {
++            row.status = STATUS.FAILED;
++            row.action = "";
++            row.error = errMsg;
++          }
++        } finally {
++          this.activeBatches--;
++          this.didUpdate();
++        }
++      };
++
++      // Launch up to threadCount concurrent workers
++      const workers = [];
++      while (batches.length > 0 && workers.length < threadCount) {
++        const batch = batches.shift();
++        const p = processBatch(batch);
++        workers.push(p);
++      }
++
++      // As workers finish, start additional batches until none remain
++      for (const w of workers) {
++        await w;
++        if (this.cancelRequested) break;
++
++        while (batches.length > 0 && !this.cancelRequested) {
++          const nextBatch = batches.shift();
++          await processBatch(nextBatch);
++        }
++      }
++
++      if (this.cancelRequested) {
++        this.generalMessage = "Queued processing was cancelled.";
++      } else {
++        const counts = this.counts();
++        this.generalMessage =
++          "Processing complete: "
++          + counts.Succeeded + " succeeded, "
++          + counts.Failed + " failed.";
++      }
++
++      this.isProcessingQueue = false;
++      this.didUpdate();
++
+     } catch (error) {
+       this.dataError = "An unexpected error occurred while processing the queue.";
+
+       console.error("Manager Update runUpdate failed", error);
+
+       this.isProcessingQueue = false;
+       this.didUpdate();
+     }
+   }
+*** End Patch
