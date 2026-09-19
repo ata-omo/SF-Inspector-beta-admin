@@ -6,14 +6,14 @@ let h = React.createElement;
 
 const allAdminTasks = [
   {
-    id: "user-update",
+    id: "manager-update",
     label: "Manager Update",
     description: "Update the Manager to align with Workday",
     primaryObject: "User",
     requiredReports: ["CR - All Active Workers - General Info"]
   },
   {
-    id: "resource-update",
+    id: "leaders-update",
     label: "Leaders Update",
     description: "Update L1,L2,L3 on Resource record to align with Workday",
     primaryObject: "KimbleOne__Resource__c",
@@ -36,7 +36,7 @@ class Model {
 
     this.showHelp = false;
 
-    this.selectedTask = null;
+    // this.selectedTask = null;
 
     this.tasks = allAdminTasks;
 
@@ -92,20 +92,38 @@ class Model {
       });
   }
 
+  // selectTask(taskId) {
+
+  //   this.selectedTask =
+  //       this.tasks.find(t => t.id === taskId);
+
+  //   this.didUpdate();
+  // }
+
+
   selectTask(taskId) {
+    const task = this.tasks.find(t => t.id === taskId);
 
-    this.selectedTask =
-        this.tasks.find(t => t.id === taskId);
+    if (!task) {
+      console.error("Admin task not found:", taskId);
+      return;
+    }
 
-    this.didUpdate();
+    const pageUrl =
+      task.id +
+      ".html?" +
+      this.args.toString();
+
+    // window.location.href = pageUrl;
+    window.location.assign(pageUrl);
   }
 
-  clearTask() {
+  // clearTask() {
 
-    this.selectedTask = null;
+  //   // this.selectedTask = null;
 
-    this.didUpdate();
-  }
+  //   this.didUpdate();
+  // }
 
 }
 
@@ -193,86 +211,86 @@ class App extends React.Component {
     );
   }
 
-  renderTaskDetails(model) {
+  // renderTaskDetails(model) {
 
-    let task = model.selectedTask;
+  //   let task = model.selectedTask;
 
-    return h(
-      "div",
-      { className: "area" },
+  //   return h(
+  //     "div",
+  //     { className: "area" },
 
-      h(
-        "div",
-        { className: "area-header" },
-        h("h1", {}, task.label)
-      ),
+  //     h(
+  //       "div",
+  //       { className: "area-header" },
+  //       h("h1", {}, task.label)
+  //     ),
 
-      h(
-        "div",
-        { style: { padding: "15px" } },
+  //     h(
+  //       "div",
+  //       { style: { padding: "15px" } },
 
-        h(
-          "p",
-          {},
-          task.description
-        ),
+  //       h(
+  //         "p",
+  //         {},
+  //         task.description
+  //       ),
 
-        h(
-          "h3",
-          {},
-          "Primary Object"
-        ),
+  //       h(
+  //         "h3",
+  //         {},
+  //         "Primary Object"
+  //       ),
 
-        h(
-          "p",
-          {},
-          task.primaryObject
-        ),
+  //       h(
+  //         "p",
+  //         {},
+  //         task.primaryObject
+  //       ),
 
-        h(
-          "h3",
-          {},
-          "Required Files"
-        ),
+  //       h(
+  //         "h3",
+  //         {},
+  //         "Required Files"
+  //       ),
 
-        h(
-          "ul",
-          {},
-          ...task.requiredFiles.map(
-            file =>
-              h(
-                "li",
-                { key: file },
-                file
-              )
-          )
-        ),
+  //       h(
+  //         "ul",
+  //         {},
+  //         ...task.requiredFiles.map(
+  //           file =>
+  //             h(
+  //               "li",
+  //               { key: file },
+  //               file
+  //             )
+  //         )
+  //       ),
 
-        h(
-          "br"
-        ),
+  //       h(
+  //         "br"
+  //       ),
 
-        h(
-          "button",
-          {
-            onClick: this.onBackClick
-          },
-          "Back"
-        ),
+  //       h(
+  //         "button",
+  //         {
+  //           onClick: this.onBackClick
+  //         },
+  //         "Back"
+  //       ),
 
-        " ",
+  //       " ",
 
-        h(
-          "button",
-          {
-            disabled: true,
-            className: "highlighted"
-          },
-          "Continue"
-        )
-      )
-    );
-  }
+  //       h(
+  //         "button",
+  //         {
+  //           disabled: true,
+  //           className: "highlighted"
+  //         },
+  //         "Continue"
+  //       )
+  //     )
+  //   );
+  // }
 
   render() {
 
@@ -334,9 +352,10 @@ class App extends React.Component {
         )
       ),
 
-      model.selectedTask
-        ? this.renderTaskDetails(model)
-        : this.renderTaskList(model),
+      // model.selectedTask
+      //   ? this.renderTaskDetails(model)
+      //   : this.renderTaskList(model),
+      this.renderTaskList(model),
 
       h(
         "div",
@@ -433,5 +452,13 @@ class App extends React.Component {
         root
       );
 
+      
+      if (window.parent && window.parent.isUnitTest) { // for unit tests
+        window.parent.insextTestLoaded({model});
+      }
+
+    })
+    .catch(err => {
+      console.error("Failed to initialize Admin Tasks:",err);
     });
 }
