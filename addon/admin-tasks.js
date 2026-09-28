@@ -6,15 +6,22 @@ let h = React.createElement;
 
 const allAdminTasks = [
   {
-    id: "manager-update",
-    label: "Manager Update",
+    id: "manager-update-d",
+    label: "Daily Manager Update",
     description: "Update the Manager to align with Workday",
     primaryObject: "User",
-    requiredReports: ["CR - All Active Workers - General Info"]
+    requiredReports: ["INT211 Kimble Manager Changes"]
+  },
+  {
+    id: "manager-update-w",
+    label: "Weekly Manager Update",
+    description: "Update the Manager to align with Workday",
+    primaryObject: "User",
+    requiredReports: ["CR-All Active Workers - General Info"]
   },
   {
     id: "leaders-update",
-    label: "Leaders Update",
+    label: "Leaders Update (Soon)",
     description: "Update L1,L2,L3 on Resource record to align with Workday",
     primaryObject: "KimbleOne__Resource__c",
     requiredReports: ["INT211 Kimble - Full Headcount for Kimble Admin"]
@@ -195,6 +202,7 @@ class App extends React.Component {
             { style: { padding: "10px" } },
 
             h("p", {}, task.description),
+            h("p", {}, `Required Reports : ${task.requiredReports}`),
 
             h(
               "button",
